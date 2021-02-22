@@ -23,3 +23,31 @@ func TestContext(t *testing.T) {
 	todo := context.TODO()
 	fmt.Println(todo)
 }
+
+func TestContextWithValue(t *testing.T) {
+	contextA := context.Background()
+
+	// contextA mempunyai child context yaitu contextB dan contextC
+	contextB := context.WithValue(contextA, "b", "B")
+	contextC := context.WithValue(contextA, "c", "C")
+
+	// contextB mempunyai child context yaitu contexD dan contextE
+	contextD := context.WithValue(contextB, "d", "D")
+	contextE := context.WithValue(contextB, "e", "E")
+
+	contextF := context.WithValue(contextC, "f", "F")
+
+	// ketika kita memberi sebuah value pada parent context
+	// maka child context dari parent tersebut akan mendapatkan data juga
+
+	// ketika kita membatalkan sebuah proses pada sebuah context
+	// maka proses pada child context tersebut juga akan dibatalkan
+	// namun tidak untuk parent context dan context tersebut
+
+	fmt.Println(contextA)
+	fmt.Println(contextB)
+	fmt.Println(contextC)
+	fmt.Println(contextD)
+	fmt.Println(contextE)
+	fmt.Println(contextF)
+}
