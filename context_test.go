@@ -3,6 +3,7 @@ package go_context
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"testing"
 )
 
@@ -58,4 +59,40 @@ func TestContextWithValue(t *testing.T) {
 	// jika hingga parent teratas masih belum mendapatkan data yang diinginkan
 	// maka akan return nil
 	fmt.Println(contextF.Value("f"))
+}
+
+func CreateCounter() chan int {
+	destination := make(chan int)
+
+	go func() {
+		defer close(destination)
+		counter := 1
+		for {
+			destination <- counter
+			counter++
+		}
+	}()
+
+	return destination
+}
+
+func TestContextWithCancle(t *testing.T) {
+	fmt.Println("Total Goroutine", runtime.NumGoroutine())
+
+	destination := CreateCounter()
+	for n := range destination {
+		fmt.Println("Counter", n)
+
+		// ini akan mengakibatkan goroutine leak
+		// karena, ketika n == 10, maka perulangan ini akan di break
+		// namun goroutine akan tetap berjalan dan mengirim data ke channel
+		// karena masih belum ada sinyal cancle
+		// sinyal cancle akan membuat proses goroutine berhenti
+
+		if n == 10 {
+			break
+		}
+	}
+
+	fmt.Println("Total Goroutine", runtime.NumGoroutine())
 }
