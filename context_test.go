@@ -50,4 +50,12 @@ func TestContextWithValue(t *testing.T) {
 	fmt.Println(contextD)
 	fmt.Println(contextE)
 	fmt.Println(contextF)
+
+	// cara untuk mendapatkan value dari sebuah context
+	// untuk mendapatkan value, sebuah context akan mengambil data dari context dirinya sendiri
+	// jika tidak ada, maka context nya akan mengambil data dari parent nya
+	// begitu seterusnya
+	// jika hingga parent teratas masih belum mendapatkan data yang diinginkan
+	// maka akan return nil
+	fmt.Println(contextF.Value("f"))
 }
