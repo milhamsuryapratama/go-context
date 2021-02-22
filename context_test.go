@@ -148,3 +148,32 @@ func TestContextWithTimeout(t *testing.T) {
 
 	fmt.Println("Total Goroutine", runtime.NumGoroutine())
 }
+
+// context withDealine digunakan untuk memberikan deadline pada waktu yang spesifik
+// misalnya kita akan hentikan prosesnya pada jam 12 siang
+func TestContextWithDeadline(t *testing.T) {
+	fmt.Println("Total Goroutine", runtime.NumGoroutine())
+
+	parent := context.Background()
+
+	// disini kita set deadline waktunya nya menjadi 5 detik dari waktu sekarang
+	ctx, cancle := context.WithDeadline(parent, time.Now().Add(5*time.Second))
+
+	// tetap gunakan cancle function
+	// untuk memastikan jika proses nya berjalan lebih cepat daripada timeout nya
+	// maka akan tetap mengirim sinyal cancle ke context
+	defer cancle()
+
+	destination := CreateCounter(ctx)
+
+	// disini kita akan membuat perulangan tanpa henti
+	// jika dalam 5 detika proses perulangan ini belum selesai
+	// maka akan otomatis di cancle oleh context dengan fungsi timeout
+	for n := range destination {
+		fmt.Println("Counter", n)
+	}
+
+	time.Sleep(2 * time.Second)
+
+	fmt.Println("Total Goroutine", runtime.NumGoroutine())
+}
