@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"testing"
+	"time"
 )
 
 func TestContext(t *testing.T) {
@@ -61,15 +62,26 @@ func TestContextWithValue(t *testing.T) {
 	fmt.Println(contextF.Value("f"))
 }
 
-func CreateCounter() chan int {
+// beri parameter context pada fungsi CreateCounter
+// agar bisa mendeteksi ketika ada sinyal cancle yang dikirim ke context
+func CreateCounter(ctx context.Context) chan int {
 	destination := make(chan int)
 
 	go func() {
 		defer close(destination)
 		counter := 1
 		for {
-			destination <- counter
-			counter++
+			// ketika proses (context) sudan selesai
+			// maka dia tidak akan mereturn apa apa
+			// dan sinyal cancle dipanggil
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				destination <- counter
+				counter++
+				time.Sleep(1 * time.Second) // simulasi slow
+			}
 		}
 	}()
 
@@ -79,7 +91,14 @@ func CreateCounter() chan int {
 func TestContextWithCancle(t *testing.T) {
 	fmt.Println("Total Goroutine", runtime.NumGoroutine())
 
-	destination := CreateCounter()
+	// kita buat contex dulu
+	// context ini akan dikirim ke fungsi CreateCounter
+	// dan memiliki sinyal cancle yang akan dipanggil ketika proses selesai
+	// agar proses goroutine berhenti
+	parent := context.Background()
+	ctx, cancle := context.WithCancel(parent)
+
+	destination := CreateCounter(ctx)
 	for n := range destination {
 		fmt.Println("Counter", n)
 
@@ -93,6 +112,12 @@ func TestContextWithCancle(t *testing.T) {
 			break
 		}
 	}
+
+	// mengirim sinyal cancle ke contex
+	// agar proses goroutine berhenti
+	cancle()
+
+	time.Sleep(2 * time.Second)
 
 	fmt.Println("Total Goroutine", runtime.NumGoroutine())
 }
